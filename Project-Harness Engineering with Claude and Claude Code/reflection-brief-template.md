@@ -9,7 +9,7 @@ Replace each `→` with your answer. **Every answer cites at least one artifact 
 
 - Model(s):Claude Haiku 4.5 (claude-haiku-4-5-20251001), used in both the Claims Intake Agent and Retail Support Copilot.
 - OS / Python:Linux (execution environment recorded in the test logs), Python 3.13.0, pytest 9.2.0.
-- Approx. API spend:Approximately $0.33 USD 
+- Approx. API spend:Approximately $0.33 USD, estimated from the recorded token usage. System 1 reports $0.1187; System 2 records approximately 198,108 input tokens and 1,799 output tokens. Applying the rates in System 1's pricing.py gives an estimated System 2 cost of approximately $0.2071, or approximately $0.3258 combined.  
 
 ---
 
@@ -26,151 +26,115 @@ Artifact: `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/
 2. **Anti-pattern.** Name one anti-pattern `test_antipatterns.py` checks for. What would break in your run if the loop used it?
    → One anti-pattern is using a hard-coded integer iteration limit as the primary stopping mechanism, such as `for _ in range(3)`. The test `test_no_integer_literal_iteration_cap_in_loop()` checks the loop using Python AST inspection. My `claim_04_neighbor_injury` trace requires five model turns, with `route_to_adjuster` called on turn four and `end_turn` received on turn five. A three-turn limit could therefore terminate the execution before routing, leaving the claim without its intended terminal action. The loop instead uses `stop_reason` for control flow and a configurable `Budget` as its safety mechanism.
 
-**Artifact:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/tests/test_antipatterns.py` and `Build a Claims Intake Agent with a stop_reason-Driven Loop/evidence/20261109_021601/traces/claim_04_neighbor_injury.jsonl`.
+    **Artifact:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/tests/test_antipatterns.py` and `Build a Claims Intake Agent with a stop_reason-Driven Loop/evidence/20261109_021601/traces/claim_04_neighbor_injury.jsonl`.
 
 3. **Tool design.** Pick two tools with overlapping inputs. How do the descriptions prevent misrouting? What did a structured tool error let the agent do that a generic string would not?
    → `classify_claim` and `route_to_adjuster` have overlapping categorical inputs because both use values from the `CLAIM_TYPES` enumeration. Their descriptions distinguish their purposes: `classify_claim` instructs the model to determine a claim type with a confidence score and rationale after gathering sufficient facts, while `route_to_adjuster` is described as a terminal tool for routing the claim to an adjuster queue after classification and severity assessment.
 
-The dispatcher prevents premature routing by checking whether classification and severity have been recorded. For example, calling `route_to_adjuster` before classification returns a structured error:
+    The dispatcher prevents premature routing by checking whether classification and severity have been recorded. For example, calling `route_to_adjuster` before classification returns a structured error:
 
-```json
-{
-  "is_error": true,
-  "error_category": "permanent",
-  "is_retryable": false,
-  "message": "classify_claim must be called before routing"
-}
-```
+    ```json
+    {
+        "is_error": true,
+        "error_category": "permanent",
+        "is_retryable": false,
+        "message": "classify_claim must be called before routing"
+    }
+    ```
 
-This gives the model explicit machine-readable information about the error category, retryability, and required correction instead of relying on an unstructured message. The harness does not automatically retry; the structured result is returned to the model so it can reason about the appropriate next action.
+    This gives the model explicit machine-readable information about the error category, retryability, and required correction instead of relying on an unstructured message. The harness does not automatically retry; the structured result is returned to the model so it can reason about the appropriate next action.
 
-One implementation limitation is that the handler does not enforce the 0.6 confidence threshold stated in the tool description or verify that the selected queue matches the recorded claim type. These are guidance-level constraints rather than enforced routing checks.
+    One implementation limitation is that the handler does not enforce the 0.6 confidence threshold stated in the tool description or verify that the selected queue matches the recorded claim type. These are guidance-level constraints rather than enforced routing checks.
 
-**Artifact:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/tools.py` and `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/tests/test_tools.py`.
+    **Artifact:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/tools.py` and `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/tests/test_tools.py`.
 
 4. **Your numbers.** Quote the turn count and cost for one claim. How does it differ from the README sample, and why?
    → For `claim_04_neighbor_injury`, the run recorded **5 turns** and an estimated cost of **$0.0216**. The complete run processed eight fixtures and reported an estimated total cost of **$0.1187**. The Exercise 3 README expects seven routed claims and one escalated claim, with an estimated total cost of approximately $0.05. My recorded results were three routed and five escalated, with an estimated cost approximately 2.37 times the README estimate.
 
-Importantly, inspection of all eight traces shows that the five escalated outcomes came from the deterministic fallback: the model ended its turn without calling either terminal tool. Only three claims were explicitly routed, and none explicitly called `escalate_to_human`. The fallback in `run.py` converted the incomplete claims into escalations to prevent them from being left without a terminal outcome. The artifacts establish the difference but do not establish one definitive reason for the model's behavior.
+    Importantly, inspection of all eight traces shows that the five escalated outcomes came from the deterministic fallback: the model ended its turn without calling either terminal tool. Only three claims were explicitly routed, and none explicitly called `escalate_to_human`. The fallback in `run.py` converted the incomplete claims into escalations to prevent them from being left without a terminal outcome. The artifacts establish the difference but do not establish one definitive reason for the model's behavior.
 
-**Artifacts:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/evidence/20261109_021601/summary.md`, `evidence/20261109_021601/traces/`, and `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/run.py`.
+    **Artifacts:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/evidence/20261109_021601/summary.md`, `evidence/20261109_021601/traces/`, and `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/run.py`.
 
 ### System 2 — Context strategy
 
 5. **The reduction.** From `budget.json`: baseline tokens, assembled tokens, reduction %. Which section dominates the assembled context, and why keep it verbatim?
    → My baseline context contained **38,708 tokens**, while the assembled context contained **16,860 tokens**, representing a **56.44% reduction**. The active conversation section dominates the assembled context at **15,789 tokens**, compared with 204 tokens for case facts, 386 for resolved refund information, and 499 for resolved subscription information.
 
-The active section is retained byte-exact because it contains the customer's current unresolved interaction and its precise conversational details. Summarizing it could remove important information or alter the meaning of the latest conversation. The implementation preserves the active conversation text verbatim while compressing resolved issues into summaries.
+    The active conversation body is retained byte-exact because it contains the customer's current unresolved interaction and its precise conversational details. Summarizing it could remove important information or alter the meaning of the latest conversation. The implementation preserves the raw active conversation text verbatim while adding a generated section heading and Markdown separators around it.
 
-One data-quality caveat: the four reported section counts total 16,878, which is 18 tokens more than the reported assembled total. The implementation counts individual sections separately from the complete assembled context, so these counts are not necessarily additive. The artifacts do not establish the exact cause of the 18-token difference, so I would not claim that the section counts add up exactly.
+    One data-quality caveat: the four reported section counts total 16,878, which is 18 tokens more than the reported assembled total. The implementation counts individual sections separately from the complete assembled context, so these counts are not necessarily additive. The test named test_budget_json_section_counts_sum_consistently() checks the presence of budget fields and the token-counting methodology, but does not assert that the section counts sum exactly to the assembled total; the artifacts do not establish the exact cause of the difference.
 
-**Artifact:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/budget.json`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/assemble.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/compressor.py`, and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/tests/test_assemble.py`.
+    **Artifact:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/budget.json`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/assemble.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/compressor.py`, and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/tests/test_assemble.py`.
 
 6. **Summarize vs preserve.** State the rule for what gets summarized vs kept byte-exact, citing your per-section token numbers.
-   → The rule is to summarize resolved conversation segments while preserving the active segment byte-exact. The resolved refund section occupies 386 tokens, while the resolved subscription section occupies 499 tokens; both can be compressed because their issues have already been addressed. The case-facts block is maintained as a compact structured extraction of 204 tokens, retaining critical information such as refund amounts, payment failure codes, and issue statuses.
+   → The rule is to summarize resolved conversation segments while preserving the active segment's raw conversation text byte-exact. The resolved refund section occupies 386 tokens, while the resolved subscription section occupies 499 tokens; both can be compressed because their issues have already been addressed. The case-facts block is maintained as a compact structured extraction of 204 tokens, retaining critical information such as refund amounts, payment failure codes, and issue statuses.
 
-The active conversation occupies 15,789 tokens and remains unchanged because the current issue is unresolved and its exact conversational context matters. The implementation prevents active segments from being summarized and the tests verify that the active segment is preserved byte-exact, that the sections appear in the intended order, and that resolved and active content are not interleaved.
+    The active section occupies 15,789 tokens and remains unchanged because the current issue is unresolved and its exact conversational context matters. The 15,789-token count is for the assembled active block, including its generated heading and surrounding formatting; the underlying active conversation body is preserved byte-exact. The implementation prevents active segments from being summarized, and the tests verify that the active segment is preserved byte-exact, that the sections appear in the intended order, and that resolved and active content are not interleaved.
 
-**Artifacts:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/budget.json`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/compressor.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/assemble.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/case_facts.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/tests/test_assemble.py`, and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/tests/test_compressor.py`.
+    **Artifacts:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/budget.json`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/compressor.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/assemble.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/case_facts.py`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/tests/test_assemble.py`, and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/tests/test_compressor.py`.
 
 7. **Facts block.** Compare `eval.jsonl` to `eval_control.jsonl`. Which question regressed, and what does that prove?
-   → Question **Q6** regressed in the control evaluation. With the Case Facts block included, the model correctly returned the exact status token `in_progress`, and the result was marked `passed: true`. When the Case Facts block was removed, the model described the issue as active and unresolved but could not provide the exact structured status token, resulting in `passed: false`.
+   → Question Q6 regressed in the control evaluation. With the Case Facts block included, the model correctly returned the exact status token in_progress, and the result was marked passed: true. When the Case Facts block was removed, the model described the issue as active and unresolved but could not provide the exact structured status token, resulting in passed: false.
 
-Q1 still passed in the control evaluation, demonstrating that not every answer depended on the Case Facts block. The refund amount remained available in the resolved refund summary, whereas the exact structured payment-update status was not available in the remaining context. This demonstrates that the structured facts block preserves precise business information needed to answer questions that may not be answerable from the remaining conversational context alone.
+    Q1 still passed in the recorded control evaluation, demonstrating that not every answer depended on the Case Facts block. The refund amount remained available in the resolved refund summary, whereas the exact structured payment-update status was present in the Case Facts block but not in the remaining conversation context. This demonstrates that, in this evaluation, the structured facts block preserved precise business information needed to answer a question that the remaining context did not supply as an exact status token.
 
-**Artifacts:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/eval.jsonl`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/eval_control.jsonl`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/evaluate.py`, and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/data/eval_questions.json`.
+    **Artifacts:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/eval.jsonl`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/eval_control.jsonl`, `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/retail_context/evaluate.py`, and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/04-assemble-and-locate/solution/data/eval_questions.json`.
 
 ### System 3 — Claude Code config
 
 8. **Path-scoped rules.** Quote the glob frontmatter from one rule file. Why is it better than a directory-level CLAUDE.md for cross-cutting conventions?
-   → One example is `.claude/rules/api.md`, which contains:
+   → One example is .claude/rules/api.md, which contains the frontmatter description: Conventions for Node.js API handlers and paths: ["src/api/**/*"]. This rule applies to files matching the API path, including files in nested directories. Path-scoped rules are useful for cross-cutting conventions because their activation depends on the file path rather than only on the directory hierarchy.
 
-```yaml
----
-description: Conventions for Node.js API handlers
-paths:
-  - "src/api/**/*"
----
-```
+    The specific API glob applies to the src/api/ subtree; it does not itself match unrelated directory trees. The broader cross-directory example is the test rule, which uses **/*.test.tsx and **/*.test.ts to match test files across different directories. The configuration tests verify that the API, React, and test rules match their intended file patterns, including cases where multiple rules apply to the same file.
 
-This rule applies to files matching the API path, including files in nested directories. Path-scoped rules are better for cross-cutting conventions because their activation depends on the file path rather than its directory location. A single rule can therefore apply consistently to matching files across multiple parts of the monorepo, avoiding duplicated directory-level `CLAUDE.md` instructions and preventing unrelated instructions from being applied to files outside the intended scope.
-
-For example, the test rule uses `**/*.test.tsx` and `**/*.test.ts` to match test files across different directories. The configuration tests verify that the API, React, and test rules match their intended file patterns, including cases where multiple rules apply to the same file.
-
-**Artifacts:** `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/.claude/rules/api.md`, `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/CLAUDE.md`, and `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/tests/test_us02_path_scoped_rules.py`.
+    **Artifacts:**: `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/.claude/rules/api.md`, `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/.claude/rules/tests.md`, `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/CLAUDE.md`, and `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/tests/test_us02_path_scoped_rules.py`
 
 
 9. **Forked skill.** Quote the `context: fork` and `allowed-tools` lines. What does running forked + read-only buy you? What breaks without it?
-   → The deploy-check skill contains:
+   → The deploy-check skill contains context: fork and an allowed-tools list consisting of Read, Grep, Glob, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git rev-parse:*), Bash(git ls-files:*), Bash(gh pr view:*), and Bash(gh pr checks:*).
 
-```yaml
-context: fork
-argument-hint: "[target-branch] (defaults to main)"
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash(git status:*)
-  - Bash(git diff:*)
-  - Bash(git log:*)
-  - Bash(git rev-parse:*)
-  - Bash(git ls-files:*)
-  - Bash(gh pr view:*)
-  - Bash(gh pr checks:*)
-```
+    Running it in a forked context is intended to isolate verbose discovery output from the main session, allowing the calling session to receive a concise structured result instead of all intermediate inspection output. The declared read-oriented tool list excludes unrestricted Bash and file-modification tools such as Edit and Write. Without the fork, verbose inspection output could consume the main session's context; without the restricted tool list, the skill could have unnecessary modification or destructive capabilities, increasing the risk of accidental changes.
 
-Running it in a forked context isolates verbose discovery output from the main session, allowing the calling session to receive a concise structured result instead of all intermediate inspection output. The read-only allowlist restricts the skill to file inspection and specific Git and GitHub CLI commands, without granting unrestricted Bash or file-modification tools.
+    The skill is configured to return a structured pass/fail summary for the main session to evaluate. The repository tests validate the frontmatter, tool list, and documented rationale; they do not demonstrate an actual live Claude Code skill invocation.
 
-Without the fork, verbose inspection output could consume the main session's context. Without the restricted tool list, the skill could have unnecessary modification or destructive capabilities, increasing the risk of accidental changes or deployment-related actions. The skill is designed to return a structured pass/fail summary for the main session to evaluate.
-
-**Artifacts:**
-- `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/.claude/skills/deploy-check/SKILL.md`
-- `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/tests/test_us04_deploy_check_skill.py`
-- `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/ecommerce_team_config/tool_allowlist.py`
+    **Artifacts:**
+    - `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/.claude/skills/deploy-check/SKILL.md`
+    - `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/tests/test_us04_deploy_check_skill.py`
+    - `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/ecommerce_team_config/tool_allowlist.py`
 
 10. **Scope.** From the validator output: project-level vs user-level scope. Give one example of each from this config.
     → The configuration validator returned `OK`, and the associated test suite recorded **35 passed**. Project-level configuration includes `./CLAUDE.md`, `.claude/standards/`, and `.claude/rules/`, which are committed and shared with the team. User-level configuration includes `~/.claude/CLAUDE.md`, `~/.claude/commands/`, and `~/.claude/skills/`, which contain personal preferences and are not shared through version control.
 
-These distinctions are explicitly documented in the project's `CLAUDE.md` and checked by the validator. The user-level paths are documented examples; the ZIP does not establish that those personal configuration files actually exist on the machine.
+    These distinctions are explicitly documented in the project's `CLAUDE.md` and checked by the validator. The user-level paths are documented examples; the ZIP does not establish that those personal configuration files actually exist on the machine.
 
-**Artifacts:** `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/CLAUDE.md`, `Configure Claude Code for a Multi-Surface Monorepo Team/evidence/test.log`, `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/ecommerce_team_config/__main__.py`, and `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/tests/test_us01_claude_md_hierarchy.py`.
+    **Artifacts:** `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/CLAUDE.md`, `Configure Claude Code for a Multi-Surface Monorepo Team/evidence/test.log`, `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/ecommerce_team_config/__main__.py`, and `Configure Claude Code for a Multi-Surface Monorepo Team/04-plan-mode-and-explore-decision-doc/solution/tests/test_us01_claude_md_hierarchy.py`.
 
 ### System 4 — Orchestration
 
 11. **Push work down.** Defects the SQL query returned vs warm-tier total. Name the indexed query. Why does the model never see the full history?
-    → The warm SQLite database contains **40 defects**, while the verification run retrieved **17 defects**, as reported in the verification report. The indexed query is:
+    → The warm SQLite database contains 40 defects, while the verification run retrieved 17 defects, as reported in the verification report. The indexed query is SELECT * FROM defects WHERE ts > ? ORDER BY ts DESC LIMIT ?;, implemented in WarmStore.defects_since(). The actual query plan for the supplied database uses the idx_defects_ts index on the timestamp column, while the query-plan test checks more generally that an index is used.
 
-```sql
-SELECT *
-FROM defects
-WHERE ts > ?
-ORDER BY ts DESC
-LIMIT ?;
-```
+    The model receives the filtered defect records together with compact hot-state information rather than the complete historical database. The pipeline retrieves the relevant records from SQLite before constructing the prompt sent to Claude. This keeps the prompt manageable while preserving historical records in the warm tier for future queries.
 
-It uses the `idx_defects_ts` index on the timestamp column. The `WarmStore.defects_since()` method performs the filtering and limiting inside SQLite, and the query-plan test checks that an index is used.
-
-The model receives the filtered defect records together with compact hot-state information rather than the complete historical database. The pipeline retrieves the relevant records from SQLite before constructing the prompt sent to Claude. This keeps the prompt manageable while preserving historical records in the warm tier for future queries.
-
-**Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/warm.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/data/warm.sqlite`, `04-fork-scratchpad/solution/verification_report.txt`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/invocation.py`, and `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/tests/test_us01_tiered_state.py`.
+    **Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/warm.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/data/warm.sqlite`, `04-fork-scratchpad/solution/verification_report.txt`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/invocation.py`, and `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/tests/test_us01_tiered_state.py`.
 
 12. **Crash recovery.** The resume-vs-fresh decision and its staleness threshold (`recovery.py`). Why is a fresh start with an injected summary sometimes more reliable than resuming?
     → The recovery helper defines `STALE_RESUME_THRESHOLD_MINUTES = 30`. It returns `fresh` when the manifest is empty or complete, and also when an incomplete manifest's last step is more than 30 minutes old. It returns `resume` when the manifest is incomplete and its last recorded step is within the 30-minute window, including exactly 30 minutes.
 
-A fresh start can be more reliable for stale work because it avoids continuing from potentially outdated partial conversational context while retaining previously captured findings as a summary. This rationale is documented in `recovery.py`: stale partial work should be restarted with the findings already captured in the manifest injected as a summary.
+    A fresh start can be more reliable for stale work because it avoids continuing from potentially outdated partial conversational context while retaining previously captured findings as a summary. This rationale is documented in `recovery.py`: stale partial work should be restarted with the findings already captured in the manifest injected as a summary.
 
-An important implementation caveat is that `recovery.decide()` is implemented and tested, but I found no production call site invoking it in the uploaded project. Therefore, this is a tested recovery decision helper and documented design rationale, not evidence that automatic end-to-end recovery is already wired into the final pipeline.
+    An important implementation caveat is that `recovery.decide()` is implemented and tested, but I found no production call site invoking it in the uploaded project. Therefore, this is a tested recovery decision helper and documented design rationale, not evidence that automatic end-to-end recovery is already wired into the final pipeline.
 
-**Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/recovery.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/manifest.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/tests/test_us03_crash_recovery.py`, and `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/invocation.py`.
+    **Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/recovery.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/manifest.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/tests/test_us03_crash_recovery.py`, and `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/invocation.py`.
 
 13. **Small state.** Byte size of your `hot_state.json`. Why does the budget matter for a system run once per shift, indefinitely?
-    → My `hot_state.json` is **965 bytes**, while the implementation enforces a maximum budget of **5,120 bytes**. The state contains recent defect hashes, the current shift summary, active alerts, and threshold statuses.
+    → My `hot_state.json` is **965 bytes**, while the implementation enforces a maximum budget of **5,120 bytes**. The state contains recent defect identifiers (stored in the field named recent_defect_hashes), the current shift summary, active alerts, and threshold statuses.
 
-Keeping this file small prevents the context passed to the model from growing indefinitely as new shifts are processed. Since the hot state is loaded into subsequent shift invocations, an unbounded state could increase token consumption and eventually exceed the model's context window. The design keeps compact operational information in hot state while leaving detailed historical records in SQLite.
+    Keeping this file small prevents the context passed to the model from growing indefinitely as new shifts are processed. Since the hot state is loaded into subsequent shift invocations, an unbounded state could increase token consumption and eventually exceed the model's context window. The design keeps compact operational information in hot state while leaving detailed historical records in SQLite.
 
-The `HotState.write_atomic()` method rejects oversized payloads and uses a temporary file followed by `os.replace()` to prevent partially written state from replacing the existing file. The pipeline also attempts to trim active alerts when the state exceeds the budget.
+    The `HotState.write_atomic()` method rejects oversized payloads and uses a temporary file followed by `os.replace()` to prevent partially written state from replacing the existing file. The pipeline also attempts to trim active alerts when the state exceeds the budget; if the resulting state is still too large, the write raises a ValueError.
 
-**Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/data/hot_state.json`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/state.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py`, and `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/verification_report.txt`.
+    **Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/data/hot_state.json`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/state.py`, `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py`, and `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/verification_report.txt`.
 
 ---
 
@@ -202,13 +166,13 @@ The `HotState.write_atomic()` method rejects oversized payloads and uses a tempo
 15. **Deterministic vs prompt.** Cite one behavior guaranteed in code (terminal tool, read-only allowlist, atomic write, byte budget) and one guided by prompt. When is each right?
     → A deterministic behavior is the **5,120-byte state limit and atomic file replacement** implemented in `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/state.py`. The code checks the serialized payload size before writing and uses `os.replace()` to replace the existing file atomically. An oversized payload raises a `ValueError` instead of replacing the existing state file.
 
-    A prompt-guided behavior is the model's decision to classify a claim, request clarification, or escalate it to a human, as described in `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/system_prompt.py`. The prompt provides claim-classification rules, severity guidance, and conditions for routing or escalation, but the model's decisions are not guaranteed by the prompt alone.
+    A prompt-guided behavior is the model's decision to classify a claim, request clarification, or escalate it to a human, as described in `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/system_prompt.py`. The prompt provides claim-classification rules, severity guidance, and conditions for routing or escalation, but the model's decisions are not guaranteed by the prompt alone; for example, the 0.6 routing-confidence requirement is not enforced by the route handler.
 
     Deterministic enforcement is appropriate for security, validation, data integrity, and operational boundaries, while prompt guidance is appropriate for contextual interpretation and natural-language reasoning. Critical safety and data-integrity requirements should not depend solely on the model following instructions; they should be enforced by the harness wherever possible.
 
     **Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/state.py` and `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/claims_intake/system_prompt.py`.
 16. **Context, two faces.** Compare context management in System 2 (intra-session) and System 4 (cross-session) with cited numbers from both. Same principle, different mechanism — how?
-    → System 2 reduces a 38,708-token conversation to 16,860 tokens, achieving a reported **56.44% reduction** while preserving the 15,789-token active segment byte-exact. Its mechanism is summarizing resolved conversations and retaining a compact structured facts block.
+    → System 2 reduces a 38,708-token conversation to 16,860 tokens, achieving a reported **56.44% reduction** while preserving the 15,789-token active segment byte-exact. Its mechanism is summarizing resolved conversations and retaining a compact structured facts block; the raw active conversation body remains byte-exact within its assembled section.
 
     System 4 keeps `hot_state.json` at **965 bytes**, retains **17 recent defect IDs** in its hot state (the field is named `recent_defect_hashes` and allows up to 20 entries), and stores the detailed **40-defect dataset** in SQLite. Its mechanism is maintaining compact operational state across shifts while retrieving relevant historical defect records from the warm tier when needed.
 
@@ -228,24 +192,22 @@ The `HotState.write_atomic()` method rejects oversized payloads and uses a tempo
     **Artifacts:** `Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/tests/test_antipatterns.py` and `Build a Claims Intake Agent with a stop_reason-Driven Loop/evidence/test.log` (30 passed).
 
 18. **Blast radius.** Pick one system. What's the blast radius if it misbehaves, and what's the kill switch? Ground it in that system's tools, enforcement points, and state.
-    → I would choose System 4, the Multi-Shift Quality Monitoring System. If the orchestration produces an incorrect assessment, it could write inaccurate summaries, alerts, or threshold statuses into `hot_state.json`. The summary is also appended to `shift_scratchpad.jsonl`. Because subsequent shifts load the persisted hot state into their prompts, incorrect information could influence later shift decisions.
+    → I would choose System 4, the Multi-Shift Quality Monitoring System. This is a single-call orchestration pipeline rather than a multi-tool agent: the run-shift CLI invokes the pipeline, which retrieves defects from SQLite and makes a Claude completion call. If the orchestration produces an incorrect assessment, it could write inaccurate summaries, alerts, or threshold statuses into `hot_state.json`; the summary is also appended to `shift_scratchpad.jsonl`. Because subsequent shifts load the persisted hot state into their prompts, incorrect information could influence later shift decisions.
 
-    The enforcement points include SQL-side filtering in `warm.py`, the 5,120-byte state budget, and atomic replacement in `state.py`. These provide bounded data retrieval, prevent oversized state writes, and protect against partially written state files. However, they do not independently verify whether the model's assessment is factually correct.
+    The enforcement points include SQL-side filtering in `warm.py`, the 5,120-byte state budget, and atomic replacement in `state.py`. These provide bounded data retrieval, prevent oversized state writes, and protect against partially written state files, but they do not independently verify whether the model's assessment is factually correct.
 
     The practical kill switch is to stop further `run-shift` invocations or disable the external process responsible for invoking them until the state and results have been reviewed. The repository does not implement a dedicated emergency kill-switch command, so stopping execution and preserving or restoring a known-good state would require operational intervention.
 
-    **Artifacts:** `04-fork-scratchpad/solution/shift_monitor/pipeline.py`, `04-fork-scratchpad/solution/shift_monitor/state.py`, `04-fork-scratchpad/solution/shift_monitor/warm.py`, `04-fork-scratchpad/solution/shift_monitor/__main__.py`, `04-fork-scratchpad/solution/data/hot_state.json`, and `04-fork-scratchpad/solution/shift_monitor/scratchpad.py`.
+    **Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py, state.py, warm.py, __main__.py, data/hot_state.json, and shift_monitor/scratchpad.py`.
 
 ---
 
 ## Part 3 — Honest assessment
 
 19. **What broke.** One thing that failed first try in your environment, and how you fixed it. (If nothing, what you checked to be sure.)
-    → During the initial System 2 test execution, two artifact-dependent tests were skipped because the generated run artifacts were not yet available. The test log explicitly reports that the assembled-context and budget artifacts were missing and instructs the developer to generate them first.
+    → The initial System 2 test run had **28 passed and two skipped** because the generated run artifacts were missing. The test log explicitly identifies the missing assembled-context and budget artifacts and instructs the developer to generate them first. I fixed this by running `python -m retail_context.run --all`, which generated run `20261109-022413`, including the assembled context, budget, and evaluation artifacts. The `--all` option performs the build, evaluation, and control evaluation; after generating the artifacts, I reran `pytest tests/ -v `and obtained 30 passed.
 
-    I fixed this by running `python -m retail_context.run --all`, which generated run `20261109-022413`, including the assembled context, budget, and evaluation artifacts. The `--all` option performs the build, evaluation, and control evaluation. After generating the artifacts, I reran `pytest tests/ -v` and obtained **30 passed**.
-
-    This was an initialization and execution-order issue rather than a failing implementation test. The initial run had 28 passed and 2 skipped; neither test failed.
+    This was an initialization and execution-order issue rather than a failing implementation test. The final System 2 rerun in the log records pytest 8.4.2, whereas the initial test invocation records pytest 9.2.0.
 
     **Artifacts:** `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/test.log` and `Engineer a Long-Conversation Context Strategy for a Retail Support Copilot/evidence/20261109-022413/`.
 
@@ -253,8 +215,8 @@ The `HotState.write_atomic()` method rejects oversized payloads and uses a tempo
 20. **What you'd change.** One architectural decision you'd make differently, grounded in what you observed.
     → I would separate deterministic defect-threshold calculations from model-generated shift summaries and recommendations. In `pipeline.py`, the current implementation accepts `threshold_statuses` from the model's JSON response and writes them into persistent hot state without independently validating whether those statuses are correct. Although this is flexible, it means an incorrect model interpretation can influence subsequent shift decisions.
 
-I would calculate numerical thresholds, severity counts, defect rates, and component concentrations directly from the warm SQLite data using deterministic logic, then use Claude to explain the findings, interpret unstructured defect descriptions, and recommend actions. For lot-level concentration calculations, I would first make lot identifiers available as structured data because the current SQLite schema does not have a dedicated lot column.
+    I would calculate severity counts and component concentrations directly from the warm SQLite data using deterministic logic, then use Claude to explain the findings, interpret unstructured defect descriptions, and recommend actions. I would also define the numerical thresholds explicitly in code or configuration; the current implementation does not independently calculate those thresholds. Production-normalized defect rates would require an appropriate denominator, such as production volume, and lot-level concentration calculations would require structured lot identifiers because the current SQLite schema has no dedicated lot column.
 
-This would make critical monitoring decisions reproducible and easier to audit while retaining the model's ability to interpret unstructured defect descriptions. The existing `top_components_for_month()` and `count_for_month()` methods in `warm.py` provide a starting point for moving aggregation work into the data layer.
+    This would make critical monitoring decisions reproducible and easier to audit while retaining the model's ability to interpret unstructured defect descriptions. The existing `top_components_for_month()` and `count_for_month()` methods in `warm.py` provide a starting point for moving aggregation work into the data layer.
 
-**Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py`, `warm.py`, `state.py`, and `data/hot_state.json`.
+    **Artifacts:** `Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/shift_monitor/pipeline.py`, `warm.py`, `state.py`, and `data/hot_state.json`.
