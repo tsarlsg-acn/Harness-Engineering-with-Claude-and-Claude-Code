@@ -1,0 +1,76 @@
+
+Building wheels for collected packages: claims_intake
+  Building editable for claims_intake (pyproject.toml) ... done
+  Created wheel for claims_intake: filename=claims_intake-0.1.0-0.editable-py3-none-any.whl size=2929 sha256=5d5e610dae854be588921893ca7e7195ab857118f234b9fec9aba930e167b493
+  Stored in directory: /tmp/pip-ephem-wheel-cache-mof7a91m/wheels/74/bf/67/30fff65d5e7bc88a9efc43c57fc3bb75a49b805fb71fb9cb6a
+Successfully built claims_intake
+Installing collected packages: claims_intake
+  Attempting uninstall: claims_intake
+    Found existing installation: claims_intake 0.1.0
+    Uninstalling claims_intake-0.1.0:
+      Successfully uninstalled claims_intake-0.1.0
+Successfully installed claims_intake-0.1.0
+
+========================================= test session starts ==========================================
+platform linux -- Python 3.13.0, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collected 30 items                                                                                     
+
+tests/test_antipatterns.py ....                                                                  [ 13%]
+tests/test_fixtures.py ........                                                                  [ 40%]
+tests/test_loop.py .....                                                                         [ 56%]
+tests/test_run_backstop.py .                                                                     [ 60%]
+tests/test_tools.py ............                                                                 [100%]
+
+========================================== 30 passed in 1.46s ==========================================
+
+
+solution student$ python -m claims_intake.run --all
+run_dir: /workspace/Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/runs/20261109_021601
+[claim_01_kitchen_fire] policy=POL-1001 expected=routed
+  → outcome=escalated turns=2 clarifications=0 tokens=6279/429 est=$0.0084
+[claim_02_stolen_bike] policy=POL-1007 expected=routed
+  → outcome=escalated turns=2 clarifications=0 tokens=6159/504 est=$0.0087
+[claim_03_water_damage] policy=POL-1004 expected=routed
+  → outcome=escalated turns=4 clarifications=1 tokens=12906/697 est=$0.0164
+[claim_04_neighbor_injury] policy=POL-1002 expected=routed
+  → outcome=routed turns=5 clarifications=0 tokens=17350/851 est=$0.0216
+[claim_05_auto_collision] policy=POL-1003 expected=routed
+  → outcome=routed turns=4 clarifications=0 tokens=14692/917 est=$0.0193
+[claim_06_low_confidence_escalation] policy=POL-1008 expected=escalated
+  → outcome=escalated turns=3 clarifications=0 tokens=9779/743 est=$0.0135
+[claim_07_tree_falls_on_car] policy=POL-1005 expected=routed
+  → outcome=routed turns=4 clarifications=0 tokens=14471/863 est=$0.0188
+[claim_08_minor_porch_damage] policy=POL-1006 expected=routed
+  → outcome=escalated turns=3 clarifications=0 tokens=9260/560 est=$0.0121
+summary: /workspace/Build a Claims Intake Agent with a stop_reason-Driven Loop/exercises/03-dynamic-decomposition/solution/runs/20261109_021601/summary.md
+total estimated cost: $0.1187
+
+20261109_021601 student$ cat summary.md 
+# Run summary — 20261109_021601
+
+- Model: `claude-haiku-4-5-20251001`
+- Fixtures processed: 8
+- Estimated total cost: **$0.1187** USD
+
+| claim_id | outcome | claim_type | severity | turns | clarifications_asked | input_tokens | output_tokens | est_cost_usd | elapsed_s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| claim_01_kitchen_fire | escalated |  | - | 2 | 0 | 6279 | 429 | 0.0084 | 5.4 |
+| claim_02_stolen_bike | escalated |  | - | 2 | 0 | 6159 | 504 | 0.0087 | 5.5 |
+| claim_03_water_damage | escalated |  | - | 4 | 1 | 12906 | 697 | 0.0164 | 9.5 |
+| claim_04_neighbor_injury | routed | liability | high | 5 | 0 | 17350 | 851 | 0.0216 | 11.3 |
+| claim_05_auto_collision | routed | auto | high | 4 | 0 | 14692 | 917 | 0.0193 | 11.2 |
+| claim_06_low_confidence_escalation | escalated |  | - | 3 | 0 | 9779 | 743 | 0.0135 | 8.5 |
+| claim_07_tree_falls_on_car | routed | auto | medium | 4 | 0 | 14471 | 863 | 0.0188 | 10.8 |
+| claim_08_minor_porch_damage | escalated |  | - | 3 | 0 | 9260 | 560 | 0.0121 | 6.3 |
+
+
+
+
+traces student$ cat claim_07_tree_falls_on_car.jsonl
+{"turn": 1, "stop_reason": "tool_use", "tool_calls": [{"id": "toolu_01WU3eYu7tB4cy1RvMcEXKm6", "name": "lookup_policy", "input": {"policy_id": "POL-1005"}}, {"id": "toolu_01DWhGcoZyDJNnYkyDw2q42K", "name": "record_claim_fact", "input": {"field": "incident_date", "value": "last night"}}, {"id": "toolu_011KMzrTvznEmSHYWx8raGSA", "name": "record_claim_fact", "input": {"field": "location", "value": "front yard driveway"}}, {"id": "toolu_01VntFdmrk9aUYr2ZwDZtTnJ", "name": "record_claim_fact", "input": {"field": "description", "value": "maple tree from own front yard fell in wind and struck parked car"}}, {"id": "toolu_018AWNkV1b1M8dqjecNMCufv", "name": "record_claim_fact", "input": {"field": "property_damaged", "value": "car hood and windshield"}}, {"id": "toolu_01UYYLouet5ksJ5rqvz8bjNm", "name": "record_claim_fact", "input": {"field": "cause", "value": "wind"}}], "latency_ms": 3614.7, "input_tokens": 2768, "output_tokens": 384}
+{"turn": 2, "stop_reason": "tool_use", "tool_calls": [{"id": "toolu_01JKQiTuxb8fUp2awAxH9Lk2", "name": "classify_claim", "input": {"claim_type": "auto", "confidence": 0.95, "rationale": "Tree fell naturally onto the policyholder's parked vehicle causing damage to the hood and windshield, which is a classic comprehensive auto claim."}}, {"id": "toolu_01XjPjrEierN5eMCR87KFe9J", "name": "assess_severity", "input": {"severity": "medium", "rationale": "Damage to hood and windshield of a parked vehicle from a fallen tree typically ranges $3,000–$8,000 depending on vehicle make and repairs needed, placing it in the medium bracket ($2,000–$25,000)."}}], "latency_ms": 3775.6, "input_tokens": 3513, "output_tokens": 302}
+{"turn": 3, "stop_reason": "tool_use", "tool_calls": [{"id": "toolu_01U3Z5Ssu8NLWji3yS7eKtRv", "name": "route_to_adjuster", "input": {"queue": "auto", "claim_summary": "Riley Kim's maple tree fell in windstorm and struck the hood and windshield of their parked car in the driveway. This is a comprehensive auto loss with medium severity ($3k–$8k estimated damage), subject to a $1,000 deductible."}}], "latency_ms": 2166.9, "input_tokens": 4010, "output_tokens": 146}
+{"turn": 4, "stop_reason": "end_turn", "tool_calls": [], "latency_ms": 1218.0, "input_tokens": 4180, "output_tokens": 31}

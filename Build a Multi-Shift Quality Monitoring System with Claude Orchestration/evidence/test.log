@@ -1,0 +1,135 @@
+Obtaining file:///workspace/Build%20a%20Multi-Shift%20Quality%20Monitoring%20System%20with%20Claude%20Orchestration/04-fork-scratchpad/solution
+  Installing build dependencies ... done
+  Checking if build backend supports build_editable ... done
+  Getting requirements to build editable ... done
+  Preparing editable metadata (pyproject.toml) ... done
+Requirement already satisfied: anthropic>=0.40 in ./.venv/lib/python3.13/site-packages (from shift-monitor==0.1.0) (2.6.0)
+Requirement already satisfied: pydantic>=2.6 in ./.venv/lib/python3.13/site-packages (from shift-monitor==0.1.0) (2.14.3)
+Requirement already satisfied: python-dateutil>=2.8 in ./.venv/lib/python3.13/site-packages (from shift-monitor==0.1.0) (4.0.0)
+Requirement already satisfied: pytest>=8 in ./.venv/lib/python3.13/site-packages (from shift-monitor==0.1.0) (9.2.0)
+Requirement already satisfied: mypy>=1.10 in ./.venv/lib/python3.13/site-packages (from shift-monitor==0.1.0) (2.4.1)
+Requirement already satisfied: ruff>=0.5 in ./.venv/lib/python3.13/site-packages (from shift-monitor==0.1.0) (0.17.4)
+Requirement already satisfied: anyio<5,>=4.1.0 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (4.16.0)
+Requirement already satisfied: docstring-parser<1,>=0.15 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (0.18.0)
+Requirement already satisfied: httpx2<3,>=2.0.0 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (2.16.0)
+Requirement already satisfied: jiter<1,>=0.4.0 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (0.18.0)
+Requirement already satisfied: opentelemetry-api<2,>=1.1.0 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (1.45.2)
+Requirement already satisfied: sniffio<2,>=1 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (1.3.1)
+Requirement already satisfied: typing-extensions<5,>=4.14 in ./.venv/lib/python3.13/site-packages (from anthropic>=0.40->shift-monitor==0.1.0) (4.16.0)
+Requirement already satisfied: mypy_extensions>=1.0.0 in ./.venv/lib/python3.13/site-packages (from mypy>=1.10->shift-monitor==0.1.0) (1.2.0)
+Requirement already satisfied: pathspec>=1.0.0 in ./.venv/lib/python3.13/site-packages (from mypy>=1.10->shift-monitor==0.1.0) (1.1.1)
+Requirement already satisfied: librt>=0.16.0 in ./.venv/lib/python3.13/site-packages (from mypy>=1.10->shift-monitor==0.1.0) (0.16.0)
+Requirement already satisfied: ast-serialize<1.0.0,>=0.12.1 in ./.venv/lib/python3.13/site-packages (from mypy>=1.10->shift-monitor==0.1.0) (0.13.1)
+Requirement already satisfied: annotated-types>=0.6.0 in ./.venv/lib/python3.13/site-packages (from pydantic>=2.6->shift-monitor==0.1.0) (0.8.0)
+Requirement already satisfied: pydantic-core==2.50.4 in ./.venv/lib/python3.13/site-packages (from pydantic>=2.6->shift-monitor==0.1.0) (2.50.4)
+Requirement already satisfied: typing-inspection>=0.4.4 in ./.venv/lib/python3.13/site-packages (from pydantic>=2.6->shift-monitor==0.1.0) (0.4.5)
+Requirement already satisfied: iniconfig>=2 in ./.venv/lib/python3.13/site-packages (from pytest>=8->shift-monitor==0.1.0) (2.3.1)
+Requirement already satisfied: packaging>=24 in ./.venv/lib/python3.13/site-packages (from pytest>=8->shift-monitor==0.1.0) (26.3)
+Requirement already satisfied: pluggy<2,>=1.6 in ./.venv/lib/python3.13/site-packages (from pytest>=8->shift-monitor==0.1.0) (1.7.0)
+Requirement already satisfied: pygments>=2.15 in ./.venv/lib/python3.13/site-packages (from pytest>=8->shift-monitor==0.1.0) (2.21.0)
+Requirement already satisfied: tzdata in ./.venv/lib/python3.13/site-packages (from python-dateutil>=2.8->shift-monitor==0.1.0) (2026.6)
+Requirement already satisfied: idna>=2.8 in ./.venv/lib/python3.13/site-packages (from anyio<5,>=4.1.0->anthropic>=0.40->shift-monitor==0.1.0) (3.20)
+Requirement already satisfied: httpcore2==2.16.0 in ./.venv/lib/python3.13/site-packages (from httpx2<3,>=2.0.0->anthropic>=0.40->shift-monitor==0.1.0) (2.16.0)
+Requirement already satisfied: truststore>=0.10 in ./.venv/lib/python3.13/site-packages (from httpx2<3,>=2.0.0->anthropic>=0.40->shift-monitor==0.1.0) (0.10.5)
+Requirement already satisfied: h11>=0.16 in ./.venv/lib/python3.13/site-packages (from httpcore2==2.16.0->httpx2<3,>=2.0.0->anthropic>=0.40->shift-monitor==0.1.0) (0.16.0)
+Building wheels for collected packages: shift-monitor
+  Building editable for shift-monitor (pyproject.toml) ... done
+  Created wheel for shift-monitor: filename=shift_monitor-0.1.0-0.editable-py3-none-any.whl size=3259 sha256=b2122aa65515a4b44bb7279a15002a8ae8c258508d996cffda3b0a65f7a03e0f
+  Stored in directory: /tmp/pip-ephem-wheel-cache-n1l448xo/wheels/bf/f0/16/1ab6308694f6d20e1aa574982969444afce1313e1042ce8ed1
+Successfully built shift-monitor
+Installing collected packages: shift-monitor
+  Attempting uninstall: shift-monitor
+    Found existing installation: shift-monitor 0.1.0
+    Uninstalling shift-monitor-0.1.0:
+      Successfully uninstalled shift-monitor-0.1.0
+Successfully installed shift-monitor-0.1.0
+
+[notice] A new release of pip is available: 24.2 -> 26.3
+[notice] To update, run: pip install --upgrade pip
+============================================================================================================ test session starts ============================================================================================================
+platform linux -- Python 3.13.0, pytest-9.2.0, pluggy-1.7.0 -- /workspace/Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution/.venv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /workspace/Build a Multi-Shift Quality Monitoring System with Claude Orchestration/04-fork-scratchpad/solution
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collected 33 items                                                                                                                                                                                                                          
+
+tests/test_us01_tiered_state.py::test_hotstate_roundtrip_and_size_budget PASSED                                                                                                                                                       [  3%]
+tests/test_us01_tiered_state.py::test_hotstate_rejects_more_than_20_hashes PASSED                                                                                                                                                     [  6%]
+tests/test_us01_tiered_state.py::test_hotstate_atomic_write PASSED                                                                                                                                                                    [  9%]
+tests/test_us01_tiered_state.py::test_warmstore_creates_table_and_index PASSED                                                                                                                                                        [ 12%]
+tests/test_us01_tiered_state.py::test_warmstore_insert_many_roundtrips PASSED                                                                                                                                                         [ 15%]
+tests/test_us01_tiered_state.py::test_coldstore_writes_monthly_summary PASSED                                                                                                                                                         [ 18%]
+tests/test_us01_tiered_state.py::test_coldstore_handles_empty_month PASSED                                                                                                                                                            [ 21%]
+tests/test_us01_tiered_state.py::test_defects_since_uses_index_and_does_not_load_full_table PASSED                                                                                                                                    [ 24%]
+tests/test_us01_tiered_state.py::test_defects_since_respects_limit PASSED                                                                                                                                                             [ 27%]
+tests/test_us02_invocation_pipeline.py::test_gather_new_defects_is_pure_passthrough_to_sql PASSED                                                                                                                                     [ 30%]
+tests/test_us02_invocation_pipeline.py::test_gather_new_defects_has_no_python_side_filtering PASSED                                                                                                                                   [ 33%]
+tests/test_us02_invocation_pipeline.py::test_invocation_shapes_are_distinct PASSED                                                                                                                                                    [ 36%]
+tests/test_us02_invocation_pipeline.py::test_build_rich_prompt_stays_under_4000_chars PASSED                                                                                                                                          [ 39%]
+tests/test_us02_invocation_pipeline.py::test_run_shift_invokes_client_exactly_once_and_writes_state PASSED                                                                                                                            [ 42%]
+tests/test_us02_invocation_pipeline.py::test_run_shift_cli_entry_point_works PASSED                                                                                                                                                   [ 45%]
+tests/test_us03_crash_recovery.py::test_append_step_writes_and_fsyncs PASSED                                                                                                                                                          [ 48%]
+tests/test_us03_crash_recovery.py::test_mid_write_read_reveals_prior_complete_lines PASSED                                                                                                                                            [ 51%]
+tests/test_us03_crash_recovery.py::test_load_returns_incomplete_state PASSED                                                                                                                                                          [ 54%]
+tests/test_us03_crash_recovery.py::test_load_returns_complete_state PASSED                                                                                                                                                            [ 57%]
+tests/test_us03_crash_recovery.py::test_load_on_missing_file_returns_empty PASSED                                                                                                                                                     [ 60%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_truth_table[1-False-resume] PASSED                                                                                                                                            [ 63%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_truth_table[29-False-resume] PASSED                                                                                                                                           [ 66%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_truth_table[30-False-resume] PASSED                                                                                                                                           [ 69%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_truth_table[31-False-fresh] PASSED                                                                                                                                            [ 72%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_truth_table[1-True-fresh] PASSED                                                                                                                                              [ 75%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_truth_table[60-True-fresh] PASSED                                                                                                                                             [ 78%]
+tests/test_us03_crash_recovery.py::test_recovery_decide_empty_manifest_is_fresh PASSED                                                                                                                                                [ 81%]
+tests/test_us03_crash_recovery.py::test_threshold_constant_is_30_minutes PASSED                                                                                                                                                       [ 84%]
+tests/test_us03_crash_recovery.py::test_resumed_prompt_has_both_sections PASSED                                                                                                                                                       [ 87%]
+tests/test_us04_fork_scratchpad.py::test_scratchpad_append_and_read_order PASSED                                                                                                                                                      [ 90%]
+tests/test_us04_fork_scratchpad.py::test_fork_for_hypothesis_copies_state_without_mutating_base PASSED                                                                                                                                [ 93%]
+tests/test_us04_fork_scratchpad.py::test_two_forks_produce_independent_scratchpads PASSED                                                                                                                                             [ 96%]
+tests/test_us04_fork_scratchpad.py::test_merge_findings_appends_without_rewriting_existing PASSED                                                                                                                                     [100%]
+
+============================================================================================================ 33 passed in 0.80s =============================================================================================================
+
+Build a Multi-Shift Quality Monitoring System with Claude Orchestration student$ cd 04-fork-scratchpad/solution/
+solution student$ ls
+README.md  fixtures  pyproject.toml  shift_monitor  shift_monitor.egg-info  tests
+solution student$ python -c "import json; from pathlib import Path; from shift_monitor.warm import WarmStore; w=WarmStore(Path('data/warm.sqlite')); w.initialize(); w.insert_many(json.load(open('fixtures/defects.json')))"
+solution student$ python -m shift_monitor run-shift --shift C --warm-db data/warm.sqlite --since 2026-04-01T00:00:00Z --recorded-response fixtures/recorded_responses/shift_C_2026-04-30.json
+2026-11-09 03:11:39,675 shift_monitor.pipeline INFO run_shift start: shift=C since=2026-04-01T00:00:00Z
+2026-11-09 03:11:39,680 shift_monitor.pipeline INFO run_shift done: shift=C new=17
+shift C: 17 new defects
+Shift C 2026-04-30: 3 high + 2 medium defects on capacitor-bank-C-7, all from lot 2026-0430-B (DAR 0.39, ESR ~19 mOhm); 1 low VP-4 vent squeal (repeat). Lot quarantine recommended.
+solution student$ 
+
+
+data student$ cat hot_state.json 
+{"recent_defect_hashes":["DEF-20260429-001","DEF-20260427-001","DEF-20260425-001","DEF-20260423-001","DEF-20260421-001","DEF-20260419-001","DEF-20260417-001","DEF-20260415-001","DEF-20260413-001","DEF-20260411-001","DEF-20260409-001","DEF-20260407-001","DEF-20260406-001","DEF-20260404-001","DEF-20260403-001","DEF-20260402-001","DEF-20260401-001"],"current_shift_summary":"Shift C 2026-04-30: 3 high + 2 medium defects on capacitor-bank-C-7, all from lot 2026-0430-B (DAR 0.39, ESR ~19 mOhm); 1 low VP-4 vent squeal (repeat). Lot quarantine recommended.","active_alerts":["capacitor-bank-C-7 elevated night-shift defect rate (15/17 in past 60 days) — escalate to HIGH","lot 2026-0430-B suspected dielectric/impregnation defect — quarantine pending sample retest","vacuum-pump-VP-4 recurring vent-cycle squeal (2x this week) — PM inspection"],"threshold_statuses":{"defect_rate_per_shift":"ALARM","critical_count_24h":"OK","lot_defect_concentration":"ALARM"}}data student$ 
+
+
+solution student$ python -c "import json; data=json.load(open('data/hot_state.json')); print('Type:', type(data)); print('Keys or Length:', list(data.keys()) if isinstance(data, dict) else len(data))"
+Type: <class 'dict'>
+Keys or Length: ['recent_defect_hashes', 'current_shift_summary', 'active_alerts', 'threshold_statuses']
+solution student$ python -c "import sqlite3, json; conn=sqlite3.connect('data/warm.sqlite'); total=conn.cursor().execute('SELECT COUNT(*) FROM defects').fetchone()[0]; data=json.load(open('data/hot_state.json')); ret=len(data.get('recent_defect_hashes', [])); print(f'Result: {ret} of {total}')"
+Result: 17 of 40
+solution student$ {
+  echo "=== 1. SHIFT RUN OUTPUT ==="
+  python -m shift_monitor run-shift --shift C --warm-db data/warm.sqlite --since 2026-04-01T00:00:00Z --recorded-response fixtures/recorded_responses/shift_C_2026-04-30.json
+
+  echo -e "\n=== 2. BYTE SIZE OF HOT STATE ==="
+  wc -c data/hot_state.json
+
+  echo -e "\n=== 3. DEFECTS RETURNED VS WARM TIER TOTAL ==="
+  python -c "import sqlite3, json; conn=sqlite3.connect('data/warm.sqlite'); total=conn.cursor().execute('SELECT COUNT(*) FROM defects').fetchone()[0]; data=json.load(open('data/hot_state.json')); ret=len(data.get('recent_defect_hashes', [])); print(f'Result: {ret} of {total}')"
+} > verification_report.txt
+2026-11-09 07:49:39,893 shift_monitor.pipeline INFO run_shift start: shift=C since=2026-04-01T00:00:00Z
+2026-11-09 07:49:39,901 shift_monitor.pipeline INFO run_shift done: shift=C new=17
+solution student$ cat verification_report.txt 
+=== 1. SHIFT RUN OUTPUT ===
+shift C: 17 new defects
+Shift C 2026-04-30: 3 high + 2 medium defects on capacitor-bank-C-7, all from lot 2026-0430-B (DAR 0.39, ESR ~19 mOhm); 1 low VP-4 vent squeal (repeat). Lot quarantine recommended.
+
+=== 2. BYTE SIZE OF HOT STATE ===
+965 data/hot_state.json
+
+=== 3. DEFECTS RETURNED VS WARM TIER TOTAL ===
+Result: 17 of 40
